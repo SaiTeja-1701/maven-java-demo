@@ -1,0 +1,389 @@
+1) Maven Java Project — Simple 1-Line Steps
+
+Clone project: git clone https://github.com/SaiTeja-1701/maven-java-demo.git
+Import in Eclipse: File → Import → Maven → Existing Maven Project.
+Open App.java: write a simple System.out.println() program.
+Build: mvn clean install
+Run: java -cp target/<jarfile>.jar com.demo.App
+Push to GitHub:
+-------------------------------------------------------------------------------------
+2) Maven Web Project — Simple 1-Line Steps
+
+Clone project: git clone https://github.com/SaiTeja-1701/maven-web-demo.git
+Import in Eclipse: Maven → Existing Maven Project.
+Edit index.jsp inside src/main/webapp/.
+Build WAR: mvn clean install
+Deploy WAR: copy target/*.war to Tomcat webapps/.
+Run in browser: http://localhost:8080/<projectname>
+-------------------------------------------------------------------------------------
+3)MYSQL THROUGH KUBERNETES
+Step 1: Start Kubernetes
+minikube start
+
+Step 2: Create file mysql-deploy.yaml
+
+(contains MySQL deployment)
+
+Step 3: Apply the deployment
+kubectl apply -f mysql-deploy.yaml
+
+Step 4: Check running pods
+kubectl get pods
+
+Step 5: Scale MySQL to 4 replicas
+kubectl scale deployment mysql --replicas=4
+
+Step 6: Verify scaling
+kubectl get pods
+
+mysql-deploy.yaml (short):
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: password
+-------------------------------------------------------------------------------------
+4)Create Multi Container of mysql and wordpress through Docker
+folder structure:
+   docker-compose.yaml
+go to the folder path cmd
+docker-compose up -d
+go to localhost:8000
+login with your wordpress credentials 
+docker-compose.yaml :
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wpsite
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    restart: always
+    ports:
+      - '8000:80'
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - wpsite
+
+networks:
+  wpsite:
+
+volumes:
+  db_data:
+  wordpress_data:
+-------------------------------------------------------------------------------------
+5)NAGIOS
+docker pull jasonrivers/nagios:latest
+docker run --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest
+go to localhost:8888 enter username : nagiosadmin and pass : nagios 
+and see the hosts and other monitoring things
+-------------------------------------------------------------------------------------
+6)AWS
+Step 1 — Launch EC2
+
+Go to AWS → EC2 → Launch Instance
+
+Ubuntu Server (Free Tier)
+
+t2.micro
+
+Create key pair (.pem)
+
+Allow inbound rules: SSH (22) + HTTP (80)
+
+Launch instance
+
+Step 2 — Connect to EC2
+
+From AWS Console → Connect → SSH command:
+
+ssh -i "SAI TEJA.pem" ubuntu@<public-ip>
+
+Step 3 — Install Docker
+sudo apt-get update
+sudo apt-get install docker.io -y
+
+Step 4 — Create your website
+
+Inside EC2:
+
+nano index.html
+
+
+Write a simple webpage:
+
+<h1>AWS Deployment Successful!</h1>
+
+
+Save: CTRL+O → Enter → CTRL+X
+
+Step 5 — Create Dockerfile
+nano Dockerfile
+
+
+Paste:
+
+FROM nginx
+COPY . /usr/share/nginx/html
+
+
+Save.
+
+Step 6 — Build Docker Image
+sudo docker build -t webapp .
+
+Step 7 — Run Docker Container (port 80)
+sudo docker run -d -p 80:80 webapp
+------------------------------------------------------------------
+7)JENKINS JAVA:
+Build CI/CD Pipeline using Jenkins for Maven Java Project :
+=> For Build Project :
+ 	-> new - name - freestyleProject.
+ 	-> Configuration :
+		-> git link, branch main
+		-> build steps - invoke top-level Maven targets - MAVEN_HOME - Goals - clean.
+		-> build steps - invoke top-level Maven targets - MAVEN_HOME - Goals - install.
+		-> post-build actions - archive the artifacts - files (**/*).
+		-> post-build actions - build other projects - project_name.
+
+=> For Test Project :
+ 	-> new - name - freestyleProject.
+ 	-> Configuration :
+		-> build environment - delete workspace before build.
+		-> build steps - copy artifacts from other project - build_project_name - stable build only - **/*.
+		-> build steps - invoke top-level Maven targets - MAVEN_HOME - Goals - test.
+=> To Build Pipeline :
+	-> +(top) - pipeline_name - type(build pipeline view) - layout - select initial project(build project).
+
+---------------------------------------------------------------------------------------
+8) JENKINS WEB
+=> For Build Project :
+ 	-> new - name - freestyleProject.
+ 	-> Configuration :
+		-> git link, branch main
+		-> build steps - invoke top-level Maven targets - MAVEN_HOME - Goals - clean.
+		-> build steps - invoke top-level Maven targets - MAVEN_HOME - Goals - install.
+		-> post-build actions - archive the artifacts - files (**/*).
+		-> post-build actions - build other projects - project_name.
+
+=> For Test Project :
+ 	-> new - name - freestyleProject.
+ 	-> Configuration :
+		-> build environment - delete workspace before build.
+		-> build steps - copy artifacts from other project - build_project_name - stable build only - **/*.
+		-> build steps - invoke top-level Maven targets - MAVEN_HOME - Goals - test.
+		-> post-build actions - archive the artifacts - files (**/*).
+		-> post-build actions - build other projects - project_name.
+
+=> For Deploy Project :
+	-> new - name - freestyleProject.
+ 	-> Configuration :
+		-> build environment - delete workspace before build.
+		-> build steps - copy artifacts from other project - build_project_name - stable build only - **/*.
+		-> post-build actions - Deploy war/ear to container - **/*(war/ear files) - context path - container - tomcat v9 - add credentials - tomcat url.
+
+=> To Build Pipeline :
+	-> +(top) - pipeline_name - type(build pipeline view) - layout - select initial project(build project).
+
+------------------------------------------------------
+9)JENKINS SCRIPT
+H/5 * * * *
+pipeline {
+    agent any
+
+    tools {
+        maven 'MAVEN_HOME'
+    }
+
+    stages {
+
+        stage('Git Clone & Clean') {
+            steps {
+                bat "git clone https://github.com/SaiTeja-1701/maven-web-demo.git"
+                bat "mvn clean -f maven-web-demo/pom.xml"
+            }
+        }
+
+        stage('Install') {
+            steps {
+                bat "mvn install -f maven-web-demo/pom.xml"
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat "mvn test -f maven-web-demo/pom.xml"
+            }
+        }
+
+        stage('Package') {
+            steps {
+                bat "mvn package -f maven-web-demo/pom.xml"
+            }
+        }
+    }
+}
+
+---------------------------------------------------
+10)NODEJS AND MONGODB
+node-mongo-app/
+    ├── Dockerfile
+    ├── docker-compose.yml
+    ├── server.js
+    ├── package.json
+  
+server.js
+
+const express = require("express");
+const mongoose = require("mongoose");
+
+
+const app = express();
+const PORT = 3000;
+
+
+const mongoURL = "mongodb://mongo:27017/mydb";
+
+
+mongoose
+  .connect(mongoURL)
+  .then(() => console.log("MongoDB Connected Successfully"))
+  .catch((err) => console.log("MongoDB Connection Error:", err));
+
+
+app.get("/", async (req, res) => {
+  res.send("Inserted user successfully! Node.js + MongoDB running!");
+});
+
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
+
+
+
+
+Dockerfile:
+
+FROM node:18
+
+WORKDIR /usr/src/app
+
+COPY package.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+
+
+
+Docker-compose.yml
+
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: node_app
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/mydb
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo_db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+
+
+Enter this command : docker-compose up --build
+Go to localhost:3000 u will get a msg
+In docker desktop show the running container and also in that node and mongodb ones
+
+----------------------------------------------------------
+11)DOCKER CREATE IMAGE(CALCULATOR)
+folderstructure :
+   calculator.js
+   Dockerfile
+
+
+
+calculator.js : 
+
+  function add(a,b){
+     return a+b
+}
+
+  console.log("Addition of (2 + 3 ) : " : add(2,3))
+
+
+Dockerfile :
+  FROM node:16-alpine
+WORKDIR /app
+COPY calculator.js /app
+CMD ["node","calculator.js"]
+
+
+Go to cmd to the file directory 
+docker build -t simple-calculator .
+docker run simple-calculator ( It will show the console printing value )
+(Go to chrome or edge and login into docker hub with u r credentials )
+docker login
+docker tag simple-calculator <dockerhub_username>/simple-calculator
+docker push <dockerhub_username>/simple-calculator
+Go to docker hub web interface and u will the simple-calculator present in repositories
+
+
+docker rm simple-calculator
+docker rmi <dockerhub_name>/simple-calculator
+
+docker pull <dockerhub_name>simple-calculator
+docker run <dockerhub_name>simple-calculator
